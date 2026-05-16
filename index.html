@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PABLO</title>
+  <meta name="description" content="Markets. Politics. Macro." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --text: #d0d0d0;
+      --text-dim: #404040;
+      --text-bright: #ffffff;
+      --border: #1e1e1e;
+      --accent: #ffffff;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      padding: 52px 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: clamp(42px, 8vw, 72px);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: var(--text-bright);
+      text-transform: uppercase;
+    }
+
+    header p.tagline {
+      margin-top: 10px;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* ── SUBSCRIBE ── */
+    .subscribe-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 24px;
+      flex-wrap: wrap;
+    }
+
+    .subscribe-bar p {
+      font-size: 10.5px;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+
+    .sub-form {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 0;
+    }
+
+    .sub-form input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 8px 12px;
+      width: 200px;
+      outline: none;
+      letter-spacing: 0.04em;
+    }
+
+    .sub-form input::placeholder { color: #282828; }
+
+    .sub-form button {
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .sub-form button:hover { color: var(--text-bright); }
+
+    /* ── SCATTER CANVAS ── */
+    #scatter {
+      position: relative;
+      width: 100%;
+      height: 520px;
+    }
+
+    .card {
+      position: absolute;
+      text-align: center;
+      cursor: pointer;
+      max-width: 210px;
+      transform: translateX(-50%);
+      opacity: 0;
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .card .date {
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card .title {
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: #b0b0b0;
+      transition: color 0.15s;
+    }
+
+    .card:hover .title { color: var(--text-bright); }
+
+    /* ── ARTICLE VIEW ── */
+    #article-view {
+      display: none;
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    #article-view .art-date {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    #article-view h2 {
+      font-size: clamp(20px, 4vw, 30px);
+      font-weight: 700;
+      color: var(--text-bright);
+      line-height: 1.25;
+      margin-bottom: 28px;
+      letter-spacing: -0.01em;
+    }
+
+    #article-view .art-body {
+      font-size: 15px;
+      line-height: 1.75;
+      color: #a0a0a0;
+    }
+
+    #article-view .art-body p { margin-bottom: 1.4em; }
+
+    /* Paywall gate */
+    .paywall {
+      margin-top: 40px;
+      border-top: 1px solid var(--border);
+      padding-top: 32px;
+      text-align: center;
+    }
+
+    .paywall p {
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      margin-bottom: 24px;
+    }
+
+    .pay-amounts {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .pay-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.06em;
+    }
+
+    .pay-btn:hover, .pay-btn.active {
+      border-color: var(--text-bright);
+      color: var(--text-bright);
+    }
+
+    .pay-name-row {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      border: 1px solid var(--border);
+      max-width: 380px;
+      margin: 0 auto 12px;
+    }
+
+    .pay-name-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 9px 12px;
+      outline: none;
+      letter-spacing: 0.04em;
+    }
+
+    .pay-name-row input::placeholder { color: #282828; }
+
+    .pay-submit {
+      background: var(--text-bright);
+      border: none;
+      color: #000;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .pay-submit:hover { opacity: 0.85; }
+
+    .pay-anon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      cursor: pointer;
+    }
+
+    .pay-anon input { accent-color: #555; cursor: pointer; }
+
+    /* Leaderboard */
+    .leaderboard {
+      max-width: 380px;
+      margin: 36px auto 0;
+    }
+
+    .lb-label {
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+
+    .lb-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 7px 0;
+      border-bottom: 1px solid #141414;
+      font-size: 12px;
+    }
+
+    .lb-row .rank { color: #303030; width: 20px; font-size: 10px; }
+    .lb-row .name { flex: 1; padding: 0 10px; color: #888; }
+    .lb-row .amount { color: var(--text-dim); font-variant-numeric: tabular-nums; font-size: 11px; }
+    .lb-row.top .name { color: var(--text); }
+
+    /* Back link */
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 32px;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .back-btn:hover { color: var(--text-bright); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Pablo</h1>
+    <p class="tagline">Markets &middot; Politics &middot; Macro</p>
+  </header>
+
+  <div class="subscribe-bar">
+    <p>Dispatches when something is worth saying.</p>
+    <div class="sub-form">
+      <input type="email" id="email-input" placeholder="your@email.com" />
+      <button onclick="handleSubscribe()">Subscribe</button>
+    </div>
+  </div>
+
+  <!-- Scatter canvas (home) -->
+  <div id="scatter"></div>
+
+  <!-- Article view -->
+  <div id="article-view">
+    <button class="back-btn" onclick="showHome()">← Back</button>
+    <div class="art-date" id="art-date"></div>
+    <h2 id="art-title"></h2>
+    <div class="art-body" id="art-body"></div>
+    <div id="art-paywall"></div>
+  </div>
+
+<script>
+  /* ── DATA ── */
+  const articles = [
+    {
+      date: "16052026",
+      title: "The dollar's slow retreat and who fills the vacuum",
+      free: true,
+      body: `<p>The dollar's reserve status has long been treated as a fixed point of the global financial system. It is not. It is a political artefact, maintained by habits, institutions, and power asymmetries that are all — slowly — eroding.</p>
+<p>The share of global central bank reserves held in dollars has declined from around 71% in 2000 to below 59% today. The pace is gradual enough to invite complacency. It should not.</p>
+<p>What is interesting is not the decline itself but its differentiation. The Gulf is moving cautiously, maintaining dollar pegs while quietly diversifying reserve composition. Southeast Asia is more ambiguous — deep trade integration with China pulling one way, security ties with the US pulling another. Latin America, especially Brazil, is experimenting more openly.</p>`
+    },
+    {
+      date: "01042026",
+      title: "Gulf sovereign funds are playing a different game now",
+      free: false,
+      preview: `<p>For most of their history, Gulf sovereign wealth funds operated as passive recyclers of petrodollar surpluses — parking capital in US treasuries and blue-chip equities, avoiding controversy, staying liquid.</p>
+<p>That model is over. What has replaced it is something more interesting and considerably more consequential.</p>`
+    },
+    {
+      date: "10032026",
+      title: "Commodity cycles never end, they just relocate",
+      free: true,
+      body: `<p>There is a persistent illusion in commodity markets that each supercycle is structurally different from the last. The China supercycle of the 2000s was going to last forever, until it didn't. The energy transition was supposed to structurally suppress fossil fuel demand by now.</p>
+<p>Commodity cycles do not end. They relocate. The demand shifts geography; the marginal cost curve shifts with it; the price signal follows. What looks like the end of one cycle is usually the beginning of another playing out somewhere less obvious.</p>
+<p>The current cycle is relocating toward critical minerals, toward the infrastructure of electrification, and toward the geographies — Africa, South America, Central Asia — where those resources are concentrated. The same dynamics that defined iron ore in 2005 are defining lithium and copper today.</p>`
+    },
+    {
+      date: "14022026",
+      title: "Why Latin America will not follow the same playbook",
+      free: false,
+      preview: `<p>Every emerging market transition gets benchmarked against the wrong template. Latin America's current moment — the combination of commodity wealth, political fragmentation, and great power competition — is being read through frameworks built for Southeast Asia or Eastern Europe.</p>
+<p>It does not fit. The region has its own logic, and getting that logic wrong is expensive.</p>`
+    },
+    {
+      date: "20012026",
+      title: "Europe's industrial policy gamble",
+      free: true,
+      body: `<p>Europe has rediscovered industrial policy. After three decades of treating it as a relic of dirigiste failure, the continent is now deploying state capacity at scale — subsidising semiconductors, batteries, clean energy, defence production.</p>
+<p>The gamble is real. Europe is betting that it can rebuild industrial muscle it allowed to atrophy, in sectors where the US and China already have large leads, on a timeline set by geopolitical urgency rather than economic logic.</p>
+<p>The honest assessment is mixed. Europe has the capital markets and the institutional capacity to make this work in some sectors. In others, the gap is probably too large and the timeline too compressed. The question is whether policymakers know the difference.</p>`
+    },
+    {
+      date: "05122025",
+      title: "China's commodity stockpiling is a geopolitical signal",
+      free: false,
+      preview: `<p>China's strategic commodity reserves have grown faster in the past three years than at any point since the programme began. The official rationale is economic stabilisation. The real rationale is considerably less benign.</p>`
+    },
+    {
+      date: "18112025",
+      title: "The end of cheap energy was always a political choice",
+      free: true,
+      body: `<p>The era of cheap energy that defined the post-Cold War globalisation was not a natural condition. It was a political construction — maintained by US security guarantees in the Gulf, by the suppression of carbon pricing, by the systematic externalisation of energy's true costs onto the climate and onto future generations.</p>
+<p>What we are experiencing now is not an energy crisis in the traditional sense. It is the gradual unwinding of that construction. The subsidies are being repriced. The security guarantees are being renegotiated. The externalised costs are becoming internal.</p>
+<p>Understanding this reframes the policy debate considerably. The question is not how to return to cheap energy. That option is not available. The question is how to manage the transition to a world where energy is structurally more expensive and more contested.</p>`
+    },
+  ];
+
+  const leaderboard = [
+    { name: "Marcos V.", amount: 240 },
+    { name: "Anonymous", amount: 180 },
+    { name: "Caroline F.", amount: 120 },
+    { name: "James W.", amount: 75 },
+    { name: "Laila M.", amount: 50 },
+  ];
+
+  let activeAmt = 25;
+
+  /* ── SCATTER ── */
+  function buildScatter() {
+    const container = document.getElementById('scatter');
+    container.innerHTML = '';
+    const W = container.offsetWidth;
+    const H = 520;
+    container.style.height = H + 'px';
+
+    const cardW = 210;
+    const cardH = 70;
+    const margin = 30;
+    const placed = [];
+
+    function overlaps(x, y) {
+      const pad = 28;
+      for (const p of placed) {
+        if (Math.abs(x - p.x) < cardW + pad && Math.abs(y - p.y) < cardH + pad) return true;
+      }
+      return false;
+    }
+
+    articles.forEach((a, i) => {
+      let cx, y, tries = 0;
+      do {
+        cx = margin + cardW / 2 + Math.random() * (W - margin * 2 - cardW);
+        y  = 20 + Math.random() * (H - cardH - 20);
+        tries++;
+      } while (overlaps(cx, y) && tries < 200);
+
+      placed.push({ x: cx, y });
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.left = cx + 'px';
+      card.style.top  = y + 'px';
+      card.style.animationDelay = (i * 0.07) + 's';
+      card.innerHTML = `<div class="date">${a.date}</div><div class="title">${a.title}</div>`;
+      card.addEventListener('click', () => showArticle(a));
+      container.appendChild(card);
+    });
+  }
+
+  /* ── ARTICLE VIEW ── */
+  function showArticle(a) {
+    document.getElementById('scatter').style.display = 'none';
+    document.querySelector('.subscribe-bar').style.display = 'none';
+    const view = document.getElementById('article-view');
+    view.style.display = 'block';
+
+    document.getElementById('art-date').textContent = a.date;
+    document.getElementById('art-title').textContent = a.title;
+
+    const bodyEl = document.getElementById('art-body');
+    const pwEl   = document.getElementById('art-paywall');
+
+    if (a.free) {
+      bodyEl.innerHTML = a.body;
+      pwEl.innerHTML = '';
+    } else {
+      bodyEl.innerHTML = (a.preview || '') + `<p style="color:#333;margin-top:1em;">— — —</p>`;
+      pwEl.innerHTML = buildPaywall(a);
+      setupPaywall();
+    }
+
+    window.scrollTo({ top: 0 });
+  }
+
+  function showHome() {
+    document.getElementById('article-view').style.display = 'none';
+    document.getElementById('scatter').style.display = 'block';
+    document.querySelector('.subscribe-bar').style.display = 'flex';
+    window.scrollTo({ top: 0 });
+  }
+
+  /* ── PAYWALL ── */
+  function buildPaywall(a) {
+    return `
+    <div class="paywall">
+      <p>Pay what you want to read this piece.</p>
+      <div class="pay-amounts">
+        <button class="pay-btn" data-amt="5">$5</button>
+        <button class="pay-btn active" data-amt="25">$25</button>
+        <button class="pay-btn" data-amt="50">$50</button>
+        <button class="pay-btn" data-amt="100">$100</button>
+      </div>
+      <div class="pay-name-row">
+        <input type="text" id="donor-name" placeholder="Your name on the leaderboard (optional)" />
+        <button class="pay-submit" onclick="handlePay()">Pay</button>
+      </div>
+      <label class="pay-anon" style="margin-bottom:32px;">
+        <input type="checkbox" id="anon-check" /> List me as anonymous
+      </label>
+      <div class="leaderboard">
+        <div class="lb-label">Top supporters</div>
+        ${leaderboard.map((r, i) => `
+          <div class="lb-row ${i === 0 ? 'top' : ''}">
+            <span class="rank">${i + 1}</span>
+            <span class="name">${r.name}</span>
+            <span class="amount">$${r.amount}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  function setupPaywall() {
+    document.querySelectorAll('.pay-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeAmt = parseInt(btn.dataset.amt);
+      });
+    });
+  }
+
+  function handlePay() {
+    const name = document.getElementById('donor-name')?.value || '';
+    const anon = document.getElementById('anon-check')?.checked;
+    /* TODO Step 2: open Stripe checkout with activeAmt, name, anon */
+    alert(`Stripe checkout coming in Step 2.\nAmount: $${activeAmt}\nName: ${anon ? 'Anonymous' : name || 'Anonymous'}`);
+  }
+
+  /* ── SUBSCRIBE ── */
+  function handleSubscribe() {
+    const email = document.getElementById('email-input').value.trim();
+    if (!email || !email.includes('@')) return;
+    /* TODO Step 3: POST to /api/subscribe with email */
+    alert(`Subscribe flow coming in Step 3.\nEmail captured: ${email}`);
+  }
+
+  /* ── INIT ── */
+  buildScatter();
+  window.addEventListener('resize', buildScatter);
+</script>
+</body>
+</html>
