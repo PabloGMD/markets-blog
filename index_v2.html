@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mass Mkts</title>
+  <meta name="description" content="markets thru politics" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --text: #ffffff;
+      --text-dim: #3a3a3a;
+      --text-bright: #ffffff;
+      --border: #1e1e1e;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      padding: 52px 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(38px, 7vw, 66px);
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--text-bright);
+      text-transform: uppercase;
+    }
+
+    /* ── SUBSCRIBE ── */
+    .subscribe-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px 24px;
+    }
+
+    .sub-form {
+      display: flex;
+      border: 1px solid #ffffff;
+    }
+
+    .sub-form input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      padding: 8px 12px;
+      width: 200px;
+      outline: none;
+      letter-spacing: 0.04em;
+    }
+
+    .sub-form input::placeholder { color: #444; }
+
+    .sub-form button {
+      background: transparent;
+      border: none;
+      border-left: 1px solid #ffffff;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .sub-form button:hover { opacity: 0.6; }
+
+    /* ── SCATTER CANVAS ── */
+    #scatter-wrap {
+      position: relative;
+      width: 100%;
+      height: 580px;
+    }
+
+    #scatter-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #scatter {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 2;
+    }
+
+    .card {
+      position: absolute;
+      text-align: center;
+      cursor: pointer;
+      width: 220px;
+      transform: translateX(-50%);
+      opacity: 0;
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .card .date {
+      font-family: 'Inter', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--text-dim);
+      margin-bottom: 7px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card .title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.35;
+      color: var(--text-bright);
+      transition: opacity 0.15s;
+    }
+
+    .card:hover .title { opacity: 0.45; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      position: fixed;
+      bottom: 20px;
+      right: 24px;
+      z-index: 100;
+    }
+
+    .site-footer a {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .site-footer a:hover { color: var(--text-bright); }
+
+    /* ── ARTICLE VIEW ── */
+    #article-view {
+      display: none;
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+    }
+
+    #article-view .art-date {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    #article-view h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700;
+      color: var(--text-bright);
+      line-height: 1.2;
+      margin-bottom: 30px;
+      letter-spacing: -0.01em;
+    }
+
+    #article-view .art-body {
+      font-family: 'Inter', sans-serif;
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: var(--text-bright);
+    }
+
+    #article-view .art-body p { margin-bottom: 1.5em; }
+
+    /* ── PAYWALL ── */
+    .paywall {
+      margin-top: 48px;
+      border-top: 1px solid var(--border);
+      padding-top: 40px;
+      text-align: center;
+    }
+
+    .paywall .pw-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .pay-options {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .pay-option {
+      border: 1px solid var(--border);
+      padding: 22px 20px 18px;
+      width: 160px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+
+    .pay-option:hover { border-color: #444; }
+    .pay-option.active { border-color: var(--text-bright); }
+
+    .pay-option .opt-amount {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-bright);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .pay-option .opt-odds {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .pay-option .opt-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #333;
+      margin-top: 12px;
+      display: block;
+    }
+
+    .pay-option.active .opt-tag { color: #888; }
+
+    .pay-submit-row { margin-top: 28px; }
+
+    .pay-submit {
+      background: var(--text-bright);
+      border: none;
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 12px 36px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .pay-submit:hover { opacity: 0.85; }
+
+    .pay-note {
+      margin-top: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      color: #252525;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── OUTCOME MODAL ── */
+    .outcome-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .outcome-overlay.show { display: flex; }
+
+    .outcome-box {
+      border: 1px solid var(--border);
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+      background: #0d0d0d;
+      animation: fadeIn2 0.3s ease forwards;
+    }
+
+    @keyframes fadeIn2 {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .outcome-result {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .outcome-result.win  { color: #fff; }
+    .outcome-result.loss { color: #555; }
+
+    .outcome-box p {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .outcome-box button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .outcome-box button:hover { color: #fff; border-color: #555; }
+
+    /* ── BACK ── */
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .back-btn:hover { color: var(--text-bright); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Mass Mkts</h1>
+  </header>
+
+  <div class="subscribe-bar">
+    <div class="sub-form">
+      <input type="email" id="email-input" placeholder="your@email.com" />
+      <button onclick="handleSubscribe()">Subscribe</button>
+    </div>
+  </div>
+
+  <!-- Scatter canvas -->
+  <div id="scatter-wrap">
+    <svg id="scatter-svg"></svg>
+    <div id="scatter"></div>
+  </div>
+
+  <!-- Article view -->
+  <div id="article-view">
+    <button class="back-btn" onclick="showHome()">← Back</button>
+    <div class="art-date" id="art-date"></div>
+    <h2 id="art-title"></h2>
+    <div class="art-body" id="art-body"></div>
+    <div id="art-paywall"></div>
+  </div>
+
+  <!-- Outcome modal -->
+  <div class="outcome-overlay" id="outcome-overlay">
+    <div class="outcome-box">
+      <div class="outcome-result" id="outcome-result"></div>
+      <p id="outcome-msg"></p>
+      <button id="outcome-btn"></button>
+    </div>
+  </div>
+
+  <!-- Fixed bottom-right: Pablo → X -->
+  <footer class="site-footer">
+    <a href="https://x.com/YOUR_X_HANDLE" target="_blank" rel="noopener">Pablo</a>
+  </footer>
+
+<script>
+  /* ── ARTICLES (newest first = index 0) ── */
+  const articles = [
+    {
+      date: "16052026",
+      title: "The dollar's slow retreat and who fills the vacuum",
+      free: true,
+      body: `<p>The dollar's reserve status has long been treated as a fixed point of the global financial system. It is not. It is a political artefact, maintained by habits, institutions, and power asymmetries that are all — slowly — eroding.</p>
+<p>The share of global central bank reserves held in dollars has declined from around 71% in 2000 to below 59% today. The pace is gradual enough to invite complacency. It should not.</p>
+<p>What is interesting is not the decline itself but its differentiation. The Gulf is moving cautiously, maintaining dollar pegs while quietly diversifying reserve composition. Southeast Asia is more ambiguous — deep trade integration with China pulling one way, security ties with the US pulling another. Latin America, especially Brazil, is experimenting more openly.</p>`
+    },
+    {
+      date: "01042026",
+      title: "Gulf sovereign funds are playing a different game now",
+      free: false,
+      preview: `<p>For most of their history, Gulf sovereign wealth funds operated as passive recyclers of petrodollar surpluses — parking capital in US treasuries and blue-chip equities, avoiding controversy, staying liquid.</p>
+<p>That model is over. What has replaced it is something more interesting and considerably more consequential.</p>`
+    },
+    {
+      date: "10032026",
+      title: "Commodity cycles never end, they just relocate",
+      free: true,
+      body: `<p>There is a persistent illusion in commodity markets that each supercycle is structurally different from the last. The China supercycle of the 2000s was going to last forever, until it didn't. The energy transition was supposed to structurally suppress fossil fuel demand by now.</p>
+<p>Commodity cycles do not end. They relocate. The demand shifts geography; the marginal cost curve shifts with it; the price signal follows. What looks like the end of one cycle is usually the beginning of another playing out somewhere less obvious.</p>
+<p>The current cycle is relocating toward critical minerals, toward the infrastructure of electrification, and toward the geographies — Africa, South America, Central Asia — where those resources are concentrated. The same dynamics that defined iron ore in 2005 are defining lithium and copper today.</p>`
+    },
+    {
+      date: "14022026",
+      title: "Why Latin America will not follow the same playbook",
+      free: false,
+      preview: `<p>Every emerging market transition gets benchmarked against the wrong template. Latin America's current moment — the combination of commodity wealth, political fragmentation, and great power competition — is being read through frameworks built for Southeast Asia or Eastern Europe.</p>
+<p>It does not fit. The region has its own logic, and getting that logic wrong is expensive.</p>`
+    },
+    {
+      date: "20012026",
+      title: "Europe's industrial policy gamble",
+      free: true,
+      body: `<p>Europe has rediscovered industrial policy. After three decades of treating it as a relic of dirigiste failure, the continent is now deploying state capacity at scale — subsidising semiconductors, batteries, clean energy, defence production.</p>
+<p>The gamble is real. Europe is betting that it can rebuild industrial muscle it allowed to atrophy, in sectors where the US and China already have large leads, on a timeline set by geopolitical urgency rather than economic logic.</p>
+<p>The honest assessment is mixed. Europe has the capital markets and the institutional capacity to make this work in some sectors. In others, the gap is probably too large and the timeline too compressed. The question is whether policymakers know the difference.</p>`
+    },
+    {
+      date: "05122025",
+      title: "China's commodity stockpiling is a geopolitical signal",
+      free: false,
+      preview: `<p>China's strategic commodity reserves have grown faster in the past three years than at any point since the programme began. The official rationale is economic stabilisation. The real rationale is considerably less benign.</p>`
+    },
+    {
+      date: "18112025",
+      title: "The end of cheap energy was always a political choice",
+      free: true,
+      body: `<p>The era of cheap energy that defined the post-Cold War globalisation was not a natural condition. It was a political construction — maintained by US security guarantees in the Gulf, by the suppression of carbon pricing, by the systematic externalisation of energy's true costs onto the climate and onto future generations.</p>
+<p>What we are experiencing now is not an energy crisis in the traditional sense. It is the gradual unwinding of that construction. The subsidies are being repriced. The security guarantees are being renegotiated. The externalised costs are becoming internal.</p>
+<p>Understanding this reframes the policy debate considerably. The question is not how to return to cheap energy. That option is not available. The question is how to manage the transition to a world where energy is structurally more expensive and more contested.</p>`
+    },
+  ];
+
+  /* ── SEEDED RANDOM (mulberry32) ──
+     Fixed seed = same positions every refresh, every device. */
+  function seededRng(seed) {
+    return function() {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  const rand = seededRng(0xDEADBEEF);
+
+  /* ── FIXED POSITIONS (seeded) ── */
+  function computePositions(W, H) {
+    const cardW = 220, cardH = 80, margin = 32, pad = 36;
+    const placed = [];
+    // Reset the rng to the same seed each call so resize stays consistent
+    const r = seededRng(0xDEADBEEF);
+    for (let i = 0; i < articles.length; i++) {
+      let cx, y, tries = 0;
+      do {
+        cx = margin + cardW / 2 + r() * (W - margin * 2 - cardW);
+        y  = 10 + r() * (H - cardH - 10);
+        tries++;
+      } while (placed.some(p => Math.abs(cx - p.cx) < cardW + pad && Math.abs(y - p.y) < cardH + pad) && tries < 300);
+      placed.push({ cx, y });
+    }
+    return placed;
+  }
+
+  /* ── BUILD SCATTER ── */
+  function buildScatter() {
+    const wrap = document.getElementById('scatter-wrap');
+    const container = document.getElementById('scatter');
+    const svg = document.getElementById('scatter-svg');
+
+    container.innerHTML = '';
+    svg.innerHTML = '';
+
+    const W = wrap.offsetWidth;
+    const H = 580;
+    wrap.style.height = H + 'px';
+
+    const positions = computePositions(W, H);
+
+    /* Draw SVG lines connecting articles in chronological order (oldest → newest)
+       Articles array is newest-first, so we reverse for the line order */
+    const order = [...articles.keys()].reverse(); // oldest to newest indices
+    const pts = order.map(i => ({
+      x: positions[i].cx,
+      y: positions[i].y + 40  /* centre of card vertically */
+    }));
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', pts[i].x);
+      line.setAttribute('y1', pts[i].y);
+      line.setAttribute('x2', pts[i + 1].x);
+      line.setAttribute('y2', pts[i + 1].y);
+      line.setAttribute('stroke', '#222222');
+      line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+    }
+
+    /* Place cards */
+    articles.forEach((a, i) => {
+      const { cx, y } = positions[i];
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.left = cx + 'px';
+      card.style.top  = y + 'px';
+      card.style.animationDelay = (i * 0.06) + 's';
+      card.innerHTML = `<div class="date">${a.date}</div><div class="title">${a.title}</div>`;
+      card.addEventListener('click', () => showArticle(a));
+      container.appendChild(card);
+    });
+  }
+
+  /* ── PAY OPTIONS ── */
+  const payOptions = [
+    { amount: 30,  payOdds: 1.000, tag: "certain",   desc: "Pay $30.<br>Read now. No gamble." },
+    { amount: 90,  payOdds: 0.300, tag: "gamble",    desc: "70% chance you read free.<br>30% you pay $90." },
+    { amount: 270, payOdds: 0.075, tag: "long shot", desc: "92.5% chance you read free.<br>7.5% you pay $270." },
+  ];
+
+  let selectedOption = payOptions[0];
+  let currentArticle = null;
+
+  /* ── ARTICLE ── */
+  function showArticle(a) {
+    currentArticle = a;
+    document.getElementById('scatter-wrap').style.display = 'none';
+    document.querySelector('.subscribe-bar').style.display = 'none';
+    const view = document.getElementById('article-view');
+    view.style.display = 'block';
+
+    document.getElementById('art-date').textContent = a.date;
+    document.getElementById('art-title').textContent = a.title;
+
+    const bodyEl = document.getElementById('art-body');
+    const pwEl   = document.getElementById('art-paywall');
+
+    if (a.free) {
+      bodyEl.innerHTML = a.body;
+      pwEl.innerHTML = '';
+    } else {
+      bodyEl.innerHTML = (a.preview || '') + `<p style="color:#222;margin-top:1em;letter-spacing:0.2em;">— — —</p>`;
+      pwEl.innerHTML = buildPaywall();
+      selectedOption = payOptions[0];
+    }
+
+    window.scrollTo({ top: 0 });
+  }
+
+  function showHome() {
+    document.getElementById('article-view').style.display = 'none';
+    document.getElementById('scatter-wrap').style.display = 'block';
+    document.querySelector('.subscribe-bar').style.display = 'flex';
+    window.scrollTo({ top: 0 });
+  }
+
+  /* ── PAYWALL ── */
+  function buildPaywall() {
+    return `
+    <div class="paywall">
+      <div class="pw-label">Choose how to unlock</div>
+      <div class="pay-options">
+        ${payOptions.map((opt, i) => `
+          <button class="pay-option ${i === 0 ? 'active' : ''}" onclick="selectOption(${i})">
+            <span class="opt-amount">$${opt.amount}</span>
+            <span class="opt-odds">${opt.desc}</span>
+            <span class="opt-tag">${opt.tag}</span>
+          </button>`).join('')}
+      </div>
+      <div class="pay-submit-row">
+        <button class="pay-submit" onclick="handlePay()">Proceed</button>
+      </div>
+      <div class="pay-note">Stripe integration coming in step 2</div>
+    </div>`;
+  }
+
+  function selectOption(idx) {
+    selectedOption = payOptions[idx];
+    document.querySelectorAll('.pay-option').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+  }
+
+  function handlePay() {
+    const overlay  = document.getElementById('outcome-overlay');
+    const resultEl = document.getElementById('outcome-result');
+    const msgEl    = document.getElementById('outcome-msg');
+    const btnEl    = document.getElementById('outcome-btn');
+
+    if (selectedOption.payOdds === 1.0) {
+      overlay.classList.add('show');
+      resultEl.className = 'outcome-result win';
+      resultEl.textContent = 'Unlocked';
+      msgEl.textContent = 'Stripe will charge $30. Article unlocks on confirmation. (Step 2)';
+      btnEl.textContent = 'Close';
+      btnEl.onclick = () => overlay.classList.remove('show');
+      return;
+    }
+
+    const wins = Math.random() > selectedOption.payOdds;
+    overlay.classList.add('show');
+
+    if (wins) {
+      resultEl.className = 'outcome-result win';
+      resultEl.textContent = "You're in";
+      msgEl.textContent = 'The odds were in your favour. You read for free.';
+      btnEl.textContent = 'Read now →';
+      btnEl.onclick = () => {
+        overlay.classList.remove('show');
+        document.getElementById('art-body').innerHTML = currentArticle.body || currentArticle.preview;
+        document.getElementById('art-paywall').innerHTML = '';
+      };
+    } else {
+      resultEl.className = 'outcome-result loss';
+      resultEl.textContent = 'Pay up';
+      msgEl.textContent = `The odds didn't go your way. Stripe will charge $${selectedOption.amount}. (Step 2)`;
+      btnEl.textContent = `Pay $${selectedOption.amount}`;
+      btnEl.onclick = () => overlay.classList.remove('show');
+    }
+  }
+
+  /* ── SUBSCRIBE ── */
+  function handleSubscribe() {
+    const email = document.getElementById('email-input').value.trim();
+    if (!email || !email.includes('@')) return;
+    alert(`Subscribe flow coming in Step 3.\nEmail: ${email}`);
+  }
+
+  /* ── INIT ── */
+  buildScatter();
+  window.addEventListener('resize', buildScatter);
+</script>
+</body>
+</html>
